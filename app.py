@@ -20,10 +20,13 @@ st.markdown("""
         padding: 10px !important;
     }
     input, textarea, select {
-        padding: 5px !important;
-        border: 1px solid #D1C2A5 !important;
-        border-radius: 4px !important;
+        color: #5D544C !important;
         background-color: #FFFFFF !important;
+        border: 1px solid #D1C2A5 !important;
+        padding: 5px !important;
+        border-radius: 4px !important;
+    }
+            label { color: #5D544C !important; }
     }
     .stButton>button {
         background-color: #E2A765 !important;
