@@ -123,6 +123,18 @@ def render_polish_tab(inventory_file, polish_type_label):
     else:
         st.info(f"No {polish_type_label.lower()} polishes added yet.")
 
+        # Create a row for your utility buttons
+col_save, col_spacer = st.columns([1, 4]) 
+
+with col_save:
+    if st.button("💾 Save All Data"):
+        # This will trigger the save function for all active tabs
+        save_data(load_data("gel_inventory.csv"), "gel_inventory.csv")
+        save_data(load_data("regular_inventory.csv"), "regular_inventory.csv")
+        save_data(load_data("client_history.csv"), "client_history.csv")
+        st.success("All data saved!")
+        st.balloons() 
+
 with tab1:
     render_polish_tab("gel_inventory.csv", "Gel")
 
