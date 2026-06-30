@@ -172,18 +172,3 @@ with tab4:
         import git
 
 # --- SIDEBAR BACKUP BUTTON ---
-with st.sidebar:
-    st.header("💾 Data Backup")
-    if st.button("Sync Data to GitHub"):
-        try:
-            # This points to your current folder
-            repo = git.Repo('.')
-            # Add your data files
-            repo.index.add(['gel_inventory.csv', 'regular_inventory.csv', 'client_history.csv'])
-            # Commit and push
-            repo.index.commit("Auto-backup data from app")
-            origin = repo.remote(name='origin')
-            origin.push()
-            st.success("Data backed up to GitHub!")
-        except Exception as e:
-            st.error(f"Backup failed: {e}")
