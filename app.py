@@ -9,13 +9,39 @@ st.set_page_config(page_title="Salon Polish Tracker", layout="wide")
 
 # --- RETRO BOHO COLOR THEME, LIGHT TEXT & LARGE PRINT CSS ---
 st.markdown("""
-    <style>
-    /* Global Background and Fonts */
+   <style>
+    /* Mobile-First Condensed Styling */
     html, body, [class*="css"], p, div, label {
-        font-size: 1.25rem !important;
-        color: #5D544C !important; /* Soft earthy charcoal for gentle reading */
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        font-size: 0.95rem !important; /* Slightly smaller for phone screens */
+        margin: 0 !important;
+        padding: 0 !important;
     }
+    
+    .stApp {
+        background-color: #F3ECE1 !important;
+        padding: 5px !important; /* Tighter margins for mobile */
+    }
+    
+    /* Tighter Inputs */
+    input, textarea, select {
+        padding: 5px !important;
+        border: 1px solid #D1C2A5 !important;
+        border-radius: 4px !important;
+    }
+    
+    /* Compact Buttons */
+    .stButton>button {
+        padding: 5px 10px !important;
+        font-size: 0.9rem !important;
+    }
+    
+    /* Horizontal line spacing */
+    hr {
+        margin: 5px 0 !important;
+        border-color: #E5A398 !important;
+        opacity: 0.3;
+    }
+</style>
     .stApp {
         background-color: #F3ECE1 !important; /* Beautiful soft warm cream base */
     }
@@ -114,22 +140,44 @@ tab1, tab2, tab3, tab4 = st.tabs(["✨ Gel Polish", "🎨 Regular Polish", "👥
 # --- POLISH TAB DESIGN ---
 def render_polish_tab(inventory_file, polish_type_label):
     df = load_data(inventory_file)
+    # --- Sort the data alphabetically by name ---
+    if not df.empty:
+        df = df.sort_values(by="Polish Name").reset_index(drop=True)
     
-    with st.expander(f"➕ Add New {polish_type_label} Polish Color"):
+    with st.expander(f"➕ Add New {polish_type_label} Polish"):
         with st.form(key=f"add_form_{inventory_file}", clear_on_submit=True):
-            new_name = st.text_input(f"New {polish_type_label} Color Name").strip()
-            new_qty = st.number_input("Starting Quantity", min_value=1, value=1)
-            submit_button = st.form_submit_button(f"Add {polish_type_label}")
-            
-            if submit_button:
+            new_name = st.text_input("Color Name").strip()
+            new_qty = st.number_input("Qty", min_value=1, value=1)
+            if st.form_submit_button("Add"):
                 if new_name and new_name not in df["Polish Name"].values:
                     new_row = pd.DataFrame([[new_name, 0, new_qty, "Full"]], columns=["Polish Name", "Uses", "Quantity", "Fluid Level"])
                     df = pd.concat([df, new_row], ignore_index=True)
                     save_data(df, inventory_file)
-                    st.success(f"Added {new_name} successfully!")
-                elif new_name:
-                    st.warning("This color already exists!")
+                    st.rerun()
 
+    # --- CONDENSED UI ---
+    if not df.empty:
+        for idx, row in df.iterrows():
+            # Using smaller column ratios for better mobile fit
+            col1, col2, col3, col4 = st.columns([3, 2, 1, 1])
+            
+            safe_key = str(row["Polish Name"]).replace(" ", "_")
+            
+            # Name and Qty in one tight row
+            col1.write(f"**{row['Polish Name']}**")
+            
+            if col2.button("Use", key=f"use_{inventory_file}_{safe_key}"):
+                df.at[idx, "Uses"] += 1
+                save_data(df, inventory_file)
+                st.rerun()
+                
+            col3.write(f"Uses: {int(row['Uses'])}")
+            
+            if col4.button("🗑️", key=f"del_{inventory_file}_{safe_key}"):
+                df = df.drop(idx)
+                save_data(df, inventory_file)
+                st.rerun()
+            st.markdown("---")
     if not df.empty:
         df = df.sort_values(by="Polish Name").reset_index(drop=True)
         st.subheader("Current Inventory")
