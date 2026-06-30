@@ -84,8 +84,8 @@ def render_polish_tab(inventory_file, polish_type_label):
 
     if not df.empty:
         for idx, row in df.iterrows():
-            # Tighter columns: Name, Fluid Level (Dropdown), Action Buttons
-            col1, col2, col3 = st.columns([2, 2, 1.5])
+            # Columns: Name (wide), Fluid (medium), Qty (small), Action (small)
+            col1, col2, col3, col4 = st.columns([3, 2, 1.2, 1])
             safe_key = str(row["Polish Name"]).replace(" ", "_")
             
             col1.write(f"**{row['Polish Name']}**")
@@ -95,20 +95,25 @@ def render_polish_tab(inventory_file, polish_type_label):
             chosen_level = col2.selectbox("Level", ["Full", "Half Full", "Nearly Empty", "Empty"], 
                                          index=["Full", "Half Full", "Nearly Empty", "Empty"].index(current_level) if current_level in ["Full", "Half Full", "Nearly Empty", "Empty"] else 0,
                                          key=f"level_{inventory_file}_{idx}", label_visibility="collapsed")
-            
             if chosen_level != current_level:
                 df.at[idx, "Fluid Level"] = chosen_level
                 save_data(df, inventory_file)
                 st.rerun()
 
-            # Dynamic Warning/Actions
-            if col3.button("Use", key=f"use_{inventory_file}_{safe_key}"):
+            # Quantity Input
+            qty_val = col3.number_input("Qty", min_value=0, value=int(row["Quantity"]), key=f"qty_{inventory_file}_{idx}", label_visibility="collapsed")
+            if qty_val != row["Quantity"]:
+                df.at[idx, "Quantity"] = qty_val
+                save_data(df, inventory_file)
+                st.rerun()
+
+            # Action Button
+            if col4.button("Use", key=f"use_{inventory_file}_{safe_key}"):
                 df.at[idx, "Uses"] += 1
                 save_data(df, inventory_file)
                 st.rerun()
             
-            # Show status and delete in a sub-row for mobile
-            st.caption(f"Uses: {int(row['Uses'])} | Status: {chosen_level}")
+            st.caption(f"Uses: {int(row['Uses'])}")
             st.markdown("---")
     else:
         st.info(f"No {polish_type_label.lower()} polishes added yet.")
