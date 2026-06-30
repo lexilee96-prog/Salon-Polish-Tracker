@@ -67,10 +67,12 @@ tab1, tab2, tab3, tab4 = st.tabs(["✨ Gel Polish", "🎨 Regular Polish", "👥
 
 # --- POLISH TAB DESIGN ---
 def render_polish_tab(inventory_file, polish_type_label):
+    # 1. Load AND Sort the data immediately
     df = load_data(inventory_file)
     if not df.empty:
         df = df.sort_values(by="Polish Name").reset_index(drop=True)
     
+    # 2. Add form
     with st.expander(f"➕ Add New {polish_type_label} Polish"):
         with st.form(key=f"add_form_{inventory_file}", clear_on_submit=True):
             new_name = st.text_input("Color Name").strip()
@@ -82,9 +84,9 @@ def render_polish_tab(inventory_file, polish_type_label):
                     save_data(df, inventory_file)
                     st.rerun()
 
+    # 3. Display Sorted Inventory
     if not df.empty:
         for idx, row in df.iterrows():
-            # Columns: Name (wide), Fluid (medium), Qty (small), Action (small)
             col1, col2, col3, col4 = st.columns([3, 2, 1.2, 1])
             safe_key = str(row["Polish Name"]).replace(" ", "_")
             
@@ -107,7 +109,7 @@ def render_polish_tab(inventory_file, polish_type_label):
                 save_data(df, inventory_file)
                 st.rerun()
 
-            # Action Button
+            # Use Button
             if col4.button("Use", key=f"use_{inventory_file}_{safe_key}"):
                 df.at[idx, "Uses"] += 1
                 save_data(df, inventory_file)
