@@ -4,10 +4,10 @@ import os
 from datetime import datetime
 import plotly.express as px
 
-# Set page config
+# --- PAGE CONFIG ---
 st.set_page_config(page_title="Salon Polish Tracker", layout="wide")
 
-# --- CLEAN THEME (No code leaks!) ---
+# --- CLEAN THEME ---
 st.markdown("""
     <style>
     html, body, [class*="css"], p, div, label {
@@ -26,8 +26,7 @@ st.markdown("""
         padding: 5px !important;
         border-radius: 4px !important;
     }
-            label { color: #5D544C !important; }
-    }
+    label { color: #5D544C !important; }
     .stButton>button {
         background-color: #E2A765 !important;
         color: #FFFFFF !important;
@@ -44,6 +43,13 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 st.title("💅 Salon Nail Polish Tracker")
+
+# --- GLOBAL SAVE BUTTON ---
+col_save, col_spacer = st.columns([1, 4]) 
+with col_save:
+    if st.button("💾 Save All Data"):
+        st.success("All data saved! Remember to backup to GitHub.")
+        st.balloons() 
 
 # --- DATABASE SETUP ---
 for file, cols in {
@@ -90,10 +96,16 @@ def render_polish_tab(inventory_file, polish_type_label):
     # 3. Display Sorted Inventory
     if not df.empty:
         for idx, row in df.iterrows():
-            col1, col2, col3, col4 = st.columns([3, 2, 1.2, 1])
+            # 5 columns for: Name, Level, Qty, Use, Delete
+            col1, col2, col3, col4, col5 = st.columns([2.5, 2, 1.2, 1, 1])
             safe_key = str(row["Polish Name"]).replace(" ", "_")
             
-            col1.write(f"**{row['Polish Name']}**")
+            # EDIT: Inline Name Editing
+            edited_name = col1.text_input("Name", value=row["Polish Name"], key=f"edit_name_{inventory_file}_{idx}", label_visibility="collapsed")
+            if edited_name != row["Polish Name"]:
+                df.at[idx, "Polish Name"] = edited_name
+                save_data(df, inventory_file)
+                st.rerun()
             
             # Fluid Level Dropdown
             current_level = row.get("Fluid Level", "Full")
@@ -117,24 +129,19 @@ def render_polish_tab(inventory_file, polish_type_label):
                 df.at[idx, "Uses"] += 1
                 save_data(df, inventory_file)
                 st.rerun()
+                
+            # DELETE Button
+            if col5.button("🗑️", key=f"del_{inventory_file}_{safe_key}"):
+                df = df.drop(idx)
+                save_data(df, inventory_file)
+                st.rerun()
             
             st.caption(f"Uses: {int(row['Uses'])}")
             st.markdown("---")
     else:
         st.info(f"No {polish_type_label.lower()} polishes added yet.")
 
-        # Create a row for your utility buttons
-col_save, col_spacer = st.columns([1, 4]) 
-
-with col_save:
-    if st.button("💾 Save All Data"):
-        # This will trigger the save function for all active tabs
-        save_data(load_data("gel_inventory.csv"), "gel_inventory.csv")
-        save_data(load_data("regular_inventory.csv"), "regular_inventory.csv")
-        save_data(load_data("client_history.csv"), "client_history.csv")
-        st.success("All data saved!")
-        st.balloons() 
-
+# Render Polish Tabs
 with tab1:
     render_polish_tab("gel_inventory.csv", "Gel")
 
@@ -169,6 +176,3 @@ with tab4:
     if not gel_df.empty and gel_df["Uses"].sum() > 0:
         fig = px.pie(gel_df[gel_df["Uses"] > 0], values='Uses', names='Polish Name', color_discrete_sequence=['#6A8E87', '#D97466', '#E2A765'])
         st.plotly_chart(fig, use_container_width=True)
-        import git
-
-# --- SIDEBAR BACKUP BUTTON ---
